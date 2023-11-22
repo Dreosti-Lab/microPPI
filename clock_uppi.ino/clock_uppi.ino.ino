@@ -26,7 +26,7 @@ void setup() {
 void loop() {
   // Calculate elapsed time since the last trial
   currentMillis = millis();
-  if (currentMillis - previousTrialMillis >= trial_interval_ms) {
+  if (currentMillis - previousTrialMillis >= trial_interval_ms) { // if trial interval has passed...
     // Update the timing reference
     previousTrialMillis = currentMillis;
 
@@ -36,34 +36,40 @@ void loop() {
     // Check if it's a pulse trial or a prepulse trial
     if (pulseTrial) {
       // Pulse Trial ----------------
-      while (currentMillis - trialStartMillis < trial_interval_ms) {
-        // Enable piezo and LED
-        if (currentMillis - trialStartMillis < prepulse_interval_ms) {
-          analogWrite(piezo_pin, large_amp);
-          digitalWrite(led_pin, HIGH);
-        } else {
-          // Disable prepulse and continue with pulse
-          analogWrite(piezo_pin, 0);
-          digitalWrite(led_pin, LOW);
-        }
-
-        // Update the current time
+      analogWrite(piezo_pin, large_amp);
+      digitalWrite(led_pin, HIGH);
+      while (currentMillis - trialStartMillis < piezo_duration_ms) { // while we are still within the piezo duration...
+        // update the time
         currentMillis = millis();
       }
-    } else {
+      // once passed, turn the piezo off
+      analogWrite(piezo_pin, 0);
+      digitalWrite(led_pin, LOW);
+    } else { // if it's a prepulse trial...
       // Prepulse Trial ----------------
-      while (currentMillis - trialStartMillis < trial_interval_ms) {
-        // Wait for the prepulse interval
-        if (currentMillis - trialStartMillis >= prepulse_interval_ms) {
-          analogWrite(piezo_pin, small_amp);
-          digitalWrite(led_pin, HIGH);
-        }
-
-        // Update the current time
+      // do a prepulse
+      analogWrite(piezo_pin, small_amp);
+      digitalWrite(led_pin, HIGH);
+      while (currentMillis - trialStartMillis < piezo_duration_ms) {
+        // Wait for the piezo duration
         currentMillis = millis();
       }
+      analogWrite(piezo_pin, 0);
+      digitalWrite(led_pin, LOW);
 
-      // Disable prepulse
+      // Wait for the rest of the prepulse interval
+      while (currentMillis - trialStartMillis < prepulse_interval_ms) {
+        // update the time
+        currentMillis = millis();
+      }
+      // Once passed...
+      // do a pulse
+      analogWrite(piezo_pin, large_amp);
+      digitalWrite(led_pin, HIGH);
+      while (currentMillis - trialStartMillis < piezo_duration_ms) {
+        // Wait for the piezo duration
+        currentMillis = millis();
+      }
       analogWrite(piezo_pin, 0);
       digitalWrite(led_pin, LOW);
     }
